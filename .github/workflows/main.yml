@@ -1,22 +1,12 @@
 - name: Copy rendered _book contents to bmm/dev-notes
-  # You may pin to the exact commit or the version.
-  # uses: nkoppel/push-files-to-another-repository@660859c460bbceccb677d51a914d0356527db320
   uses: nkoppel/push-files-to-another-repository@v1.1.2
   with:
-    # The files/directories to copy to the destination repository. Can have multiple space-separated filenames and globbing.
     source-files: '_book/'
-    # Name of the destination username/organization
     destination-username: 'venpopov'
-    # Name of the destination repository
     destination-repository: 'bmm'
-    # [Optional] set target branch name for the destination repository.
     destination-branch: 'gh-pages'
-    # [Opitonal] Directory to copy files into in the destination repository
     destination-directory: 'dev/dev-notes/
-    # [Optional] Username for the commit. Defaults to the destination username
     commit-username: 'venpopov'
-    # Email for the commit
     commit-email: 'vencislav.popov@gmail.com'
-    # [Optional] commit message for the output repository. ORIGIN_COMMIT is replaced by the URL@commit in the origin repo
     commit-message: 'Update dev-notes'
           
