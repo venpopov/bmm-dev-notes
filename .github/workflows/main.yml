@@ -1,4 +1,4 @@
-- name: Copy rendered _book contents to bmm/dev-notes
+  - name: Copy rendered _book contents to bmm/dev-notes
   uses: nkoppel/push-files-to-another-repository@v1.1.2
   with:
     source-files: '_book/'
