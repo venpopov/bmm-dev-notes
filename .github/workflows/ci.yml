@@ -14,7 +14,6 @@ jobs:
                                # used in the specific "build.sh"
     steps:
       - uses: actions/checkout@v2
-      - name: creates output
       - name: Pushes to another repository
         uses: cpina/github-action-push-to-another-repository@main
         env:
