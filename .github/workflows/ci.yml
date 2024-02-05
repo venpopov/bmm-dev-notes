@@ -24,4 +24,4 @@ jobs:
           destination-repository-name: 'bmm'
           user-email: vencislav.popov@gmail.com
           target-branch: gh-pages
-          target-directory: doc/dev/dev-notes
+          target-directory: dev/dev-notes
