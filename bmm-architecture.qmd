@@ -1,0 +1,145 @@
+# BMM code structure {#sec-bmm-architecture}
+
+Adding a new model is straightforward using the `use_model_template()` function, which will be described in the next section. You do not have to edit any of the files below, but it will be helpful to understand the structure of the package.
+
+## The main workhorse - `fit_model()`
+
+The main function for fitting models is `fit_model()`. This function is the main entry point for users to fit models. It is set-up to be independent of the specific models that are implemented in the package:
+
+``` r
+fit_model <- function(formula, data, model, parallel = FALSE, 
+                      chains = 4, prior = NULL, ...) {
+  # enable parallel sampling if parallel equals TRUE
+  opts <- configure_options(nlist(parallel, chains))
+
+  # check model, formula and data, and transform data if necessary
+  model <- check_model(model)
+  formula <- check_formula(model, formula)
+  data <- check_data(model, data, formula)
+
+  # generate the model specification to pass to brms later
+  config_args <- configure_model(model, data, formula)
+
+  # combine the default prior plus user given prior
+  config_args <- combine_prior(config_args, prior)
+
+  # estimate the model
+  dots <- list(...)
+  fit_args <- c(config_args, opts, dots)
+  fit <- call_brm(fit_args)
+
+  # model postprocessing
+  fit <- postprocess_brm(model, fit)
+
+  return(fit)
+}
+```
+
+It calls several subroutines, implemented as generic S3 methods, to:
+
+-   `configure_options()` - to configure local options for fitting, such as parallel sampling,
+-   `check_model()` - check if the model exists
+-   `check_formula()` - check if the formula is specified correctly
+-   `check_data()` - whether the data contains all necessary information
+-   `configure_model()` - to configure the model for fitting
+-   `combine_priors()` - to combine a user specified prior with the default priors we provide for each model
+-   `call_brm()` - to fit the model using the `brm()` function from the `brms` package
+-   `postprocess_brm()` - to postprocess the fitted model
+
+## Models
+
+All models in the package are defined as S3 classes and follow a strict template. This allows us to implement general methods for handling model fitting, data checking, and postprocessing. Each model has an internal function that defines the model and its parameters, and a user-facing alias. For a complete example model file and an explanation, see [Section @sec-example-model]. The general model template looks like this:
+
+```r
+.model_modelname <- function(required_arg1, required_arg2, ...) {
+   out <- list(
+      vars = nlist(required_arg1, required_arg2),
+      info = list(
+         domain = '',
+         task = '',
+         name = '',
+         citation = '',
+         version = '',
+         requirements = '',
+         parameters = list()
+      ))
+   class(out) <- c('bmmmodel', 'modelname')
+   out
+}
+```
+
+Each model is accompanied by a user-facing alias, the documentation of which is generated automatically based on the info list in the model definition. 
+
+```r
+# user facing alias
+# information in the title and details sections will be filled in
+# automatically based on the information in the .model_modelname()$info
+#' @title `r .model_modelname()$info$name`
+#' @details `r model_info(modelname(NA,NA))`
+#' @param required_arg1 A description of the required argument
+#' @param required_arg2 A description of the required argument
+#' @param ... used internally for testing, ignore it
+#' @return An object of class `bmmmodel`
+#' @export
+#' @examples
+#' \dontrun{
+#' # put a full example here (see 'R/bmm_model_mixture3p.R' for an example)
+#' }
+modelname <- .model_modelname
+```
+
+Then users can fit the model using the `fit_model()` function, and the model will be automatically recognized and handled by the package:
+
+```r
+fit <- fit_model(formula, 
+                 data = mydata, 
+                 model = modelname(required_arg1, required_arg2))
+```
+
+## S3 methods
+
+The package uses S3 methods to handle different models. This means that the same function can behave differently depending on the class of the object it is called with. For example, the `configure_model(model)` function called by `fit_model()`, is generally defined as:
+
+```r
+configure_model <- function(model) {
+   UseMethod('configure_model')
+}
+```
+
+and it will call a function `configure_model.modelname()` that is specified for each model. The same is true for other functions, such as `check_data()`, `postprocess_brm()`, and `check_formula()`. This allows us to add new models without having to edit the main fitting function, `fit_model()`.
+
+## File organization
+
+The `bmm` package is organized into several files. The main files are:
+
+### `R/fit_model.R` {.unnumbered}
+
+It contains the main function for fitting models, `fit_model()`. This function is the main entry point for users to fit models. It is set-up to be independent of the specific models that are implemented in the package. 
+
+To add new models, you do not have to edit this file. The functions above are generic S3 methods, and they will automatically recognize new models if you add appropriate methods for them (see section [Adding new models](#adding-new-models-to-bmm)).
+
+### `R/helpers-*.R` {.unnumbered}
+
+`R/helpers-data.R`, `R/helpers-postprocess.R`, `R/helpers-model.R`, `R/helpers-formula.R` and `R/helpers-prior.R` 
+
+These files define the main generic S3 methods for checking data, postprocessing the fitted model, configuring the model, checking the model formula, and combining priors. They contain the default methods for these functions, which are called by `fit_model()` if no specific method is defined for a model. If you want to add a new model, you will need to add specific methods for these functions for your model. *You do not need to edit these files to add a new model.*
+
+### `R/bmm_model_*.R` {.unnumbered}
+
+Each model and it's methods is defined in a separate file. For example, the 3-parameter mixture model is defined in `bmm_model_3p.R`. This file contains the internal function that defines the model and its parameters, and the specific methods for the generic S3 functions. Your new model will exist in a file like this. The name of the file should be `bmm_model_name_of_your_model.R`. You don't have to add this file manually - see section [Adding new models](#adding-new-models-to-bmm).
+
+### `R/bmm_distributions.R` {.unnumbered}
+
+This file contains the definition of the custom distributions that are used in the package. It specifies the density, random number generation, and probability functions for the custom distributions. If your model requires a custom distribution, you will need to add it to this file. These are not used during model fitting, but can be used to generate data from the model, and to plot the model fit.
+
+### `R/random_data_generation.R` {.unnumbered}
+
+Functions for generating random data from the models. This is useful for testing the models.
+
+### `R/utils.R`, `R/brms-misc.R` {.unnumbered}
+
+Various utility functions.
+
+### `inst/stan_chunks/` {.unnumbered}
+
+This directory contains the Stan chunks that are passed to the `brms::stanvar()` function. These are used to define the custom distributions that are used in the package. If you add a new custom distribution, you will need to add a new Stan chunk to this directory. Each model has several files, one for each corresponding stanvar block.

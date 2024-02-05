@@ -1,0 +1,28 @@
+project:
+  type: book
+
+book:
+  title: "BMM Developer Notes"
+  chapters:
+    - index.qmd
+    - setup.qmd
+    - git-workflow.qmd
+    - bmm-architecture.qmd
+    - example-model.qmd
+    - add-new-model.qmd
+
+
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+    code-line-numbers: true
+    code-fold: true
+    grid:
+       body-width: 900px
+  pdf:
+    documentclass: scrreprt
+
+editor: visual
+

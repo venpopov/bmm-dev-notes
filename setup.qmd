@@ -1,0 +1,62 @@
+# System setup  {#sec-setup}
+
+## Setting up a local fork of the bmm repository
+
+1.  Fork the bmm github repository. This will create a copy of the current development branch into your own github account
+
+    ![](images/clipboard-758253314.png)
+
+2.  [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) your fork to your local machine
+
+3.  [Create a new branch](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches) for your model, typically named `feature/name-of-my-model`
+
+## Package development via RStudio and devtools
+
+The bmm package is setup as an RStudio project. Opening the `bmm.Rproj` file will open a new RStudio instance, which facilitates package development with a few commands from the `devtools` package. A great tutorial on package development can be found [here](https://r-pkgs.org/). Below is a summary of the most important steps
+
+1.  Make sure you have the devtools package and a few others installed and loaded
+
+    ``` r
+    install.packages(c("devtools", "roxygen2", "testthat", "knitr"))
+    library(devtools)
+    ```
+
+    To avoid having to load the package every time, you can add the following code to your `.Rprofile` file
+
+    ``` r
+    if (interactive()) {
+      suppressMessages(require(devtools))
+    }
+    ```
+
+    As noted [here](https://r-pkgs.org/setup.html#personal-startup-configuration), you can create and open an `.Rprofile` file, if you don't already have one with
+
+    ``` r
+    use_devtools()
+    ```
+
+2.  Load the current version of the `bmm` package based on your local files
+
+    ``` r
+    load_all()  # or ctrl+shift+L
+    ```
+
+    you can use this command whenever you make changes to the package code to see the changes in action. You should not call `library(bmm)` or source the files manually, as this will load the installed version of the package, not the one you are developing.
+
+3.  Make any changes to the package code that you need to make (elaborated in the next section)
+
+4.  Use `check()` to check the package for errors and warnings
+
+    ``` r
+    check()
+    ```
+
+    you should always ensure that check() produces no errors before submitting a pull request
+
+5.  Use `document()` to update the documentation
+
+    ``` r
+    document()
+    ```
+
+    </details>
