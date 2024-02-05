@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: pandoc/latex    # "ubuntu" is a more generic container
+                               # using "pandoc/latex" because of dependencies
+                               # used in the specific "build.sh"
+    steps:
+      - uses: actions/checkout@v2
+      - name: creates output
+        run:  sh ./build.sh # some command from your repository that creates
+                            # output to "source-directory" ("output" in the example)
+      - name: Pushes to another repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: '_book'
+          destination-github-username: 'venpopov'
+          destination-repository-name: 'bmm'
+          user-email: vencislav.popov@gmail.com
+          target-branch: gh-pages
+          target-directory: doc/dev/dev-notes
