@@ -10,6 +10,18 @@ book:
     - bmm-architecture.qmd
     - example-model.qmd
     - add-new-model.qmd
+  navbar:
+    background: primary
+    search: true
+    left:
+       - text: Functions
+         href: ../reference/index.html
+       - text: Articles
+         href: articles/index.html
+       - text: Changelog
+         href: news/index.html
+       - text: Develop
+         href: dev-notes/index.html
 
 
 bibliography: references.bib
