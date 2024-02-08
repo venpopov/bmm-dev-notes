@@ -156,10 +156,11 @@ configure_model.gcm <- function(model, data, formula) {
    family <- gcm_family
 
    # prepare initial stanvars to pass to brms, model formula and priors
-   stan_likelihood <- readChar('inst/stan_chunks/gcm_likelihood.stan',
-      file.info('inst/stan_chunks/gcm_likelihood.stan')$size)
-   stan_functions <- readChar('inst/stan_chunks/gcm_functions.stan',
-      file.info('inst/stan_chunks/gcm_functions.stan')$size)
+   sc_path <- system.file('stan_chunks', package='bmm')
+   stan_likelihood <- readChar(paste0(sc_path, '/gcm_likelihood.stan'),
+      file.info(paste0(sc_path, '/gcm_likelihood.stan'))$size)
+   stan_functions <- readChar(paste0(sc_path, '/gcm_functions.stan'),
+      file.info(paste0(sc_path, '/gcm_functions.stan'))$size)
 
    stanvars <- stanvar(scode = stan_likelihood, block = 'likelihood') +
       stanvar(scode = stan_functions, block = 'functions')
@@ -229,5 +230,19 @@ The tests based on the `testthat` package are run every time you call the `check
 ::: {.callout-important}
 Additionally, you should perform a full test of the model by running it in a separate script and ensuring it gives meaningful results. At the very least, you should perform parameter recovery simulations. We are in the process of establishing guidelines for that.
 :::
+
+## Add an example dataset
+
+All new models should come with an example dataset, that can be loaded by users and that can be used in the examples section. This should be one of:
+
+- A new dataset that you add to the package
+- A dataset that already exists in the package but that can be used with the new model
+- A dataset that exists in another package that you can load with `data()` and use with the new model
+
+For example, the vignettes for the `mixture2p` and `mixture3p` use an external dataset from the `mixtur` package that can be loaded with `data('bays2009_full', package='mixtur')`. The `IMM` models use a dataset included in the current package. For instructions on how to add a new dataset see [here](https://r-pkgs.org/data.html).
+
+## Add a vignette
+
+All new models should come with a vignette that explains some basic information about the model and how to estimate it with `bmm`. You can use the `use_vignette()` function to create a new vignette. See [here](https://r-pkgs.org/vignettes.html) for more information. The vignettes will be published automatically on the package website under "Articles" when the pull request is approved. You can browse the source code for the existing vignettes in the `vignettes/` directory. You can see the published version of the existing vignettes [here](../articles/).
 
 And that's it! You have added a new model to the `bmm` package. You can now submit your changes to the `bmm` package repository. 

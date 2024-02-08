@@ -20,8 +20,8 @@ fit_model <- function(formula, data, model, parallel = FALSE,
   # generate the model specification to pass to brms later
   config_args <- configure_model(model, data, formula)
 
-  # combine the default prior plus user given prior
-  config_args <- combine_prior(config_args, prior)
+ # combine the default prior plus user given prior
+  config_args$prior <- combine_prior(config_args$prior, prior)
 
   # estimate the model
   dots <- list(...)
@@ -126,7 +126,7 @@ These files define the main generic S3 methods for checking data, postprocessing
 
 ### `R/bmm_model_*.R` {.unnumbered}
 
-Each model and it's methods is defined in a separate file. For example, the 3-parameter mixture model is defined in `bmm_model_3p.R`. This file contains the internal function that defines the model and its parameters, and the specific methods for the generic S3 functions. Your new model will exist in a file like this. The name of the file should be `bmm_model_name_of_your_model.R`. You don't have to add this file manually - see section [Adding new models](#adding-new-models-to-bmm).
+Each model and it's methods is defined in a separate file. For example, the 3-parameter mixture model is defined in `bmm_model_mixture3p.R`. This file contains the internal function that defines the model and its parameters, and the specific methods for the generic S3 functions. Your new model will exist in a file like this. The name of the file should be `bmm_model_name_of_your_model.R`. You don't have to add this file manually - see section [Adding new models](#adding-new-models-to-bmm).
 
 ### `R/bmm_distributions.R` {.unnumbered}
 

@@ -245,12 +245,13 @@ configure_model.sdmSimple <- function(model, data, formula) {
     family <- sdm_simple
 
     # prepare initial stanvars to pass to brms, model formula and priors
-    stan_funs <- readChar('inst/stan_chunks/sdmSimple_funs.stan',
-                          file.info('inst/stan_chunks/sdmSimple_funs.stan')$size)
-    stan_tdata <- readChar('inst/stan_chunks/sdmSimple_tdata.stan',
-                           file.info('inst/stan_chunks/sdmSimple_tdata.stan')$size)
-    stan_likelihood <- readChar('inst/stan_chunks/sdmSimple_likelihood.stan',
-                               file.info('inst/stan_chunks/sdmSimple_likelihood.stan')$size)
+    sc_path <- system.file("stan_chunks", package="bmm")
+    stan_funs <- readChar(paste0(sc_path, '/sdmSimple_funs.stan'),
+                          file.info(paste0(sc_path, '/sdmSimple_funs.stan'))$size)
+    stan_tdata <- readChar(paste0(sc_path, '/sdmSimple_tdata.stan'),
+                           file.info(paste0(sc_path, '/sdmSimple_tdata.stan'))$size)
+    stan_likelihood <- readChar(paste0(sc_path, '/sdmSimple_likelihood.stan'),
+                               file.info(paste0(sc_path, '/sdmSimple_likelihood.stan'))$size)
     stanvars <- brms::stanvar(scode = stan_funs, block = "functions") +
       brms::stanvar(scode = stan_tdata, block = 'tdata') +
       brms::stanvar(scode = stan_likelihood, block = 'likelihood', position="end")
@@ -271,7 +272,7 @@ configure_model.sdmSimple <- function(model, data, formula) {
 
 **Lines 5-10** use the `brms::custom_family` function to define a custom family for the SDM model. The `dpars` argument specifies the parameters of the model, and the `links` argument specifies the link functions for the parameters. For more information, see [here](https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html)
 
-**Lines 13-22** read the custom stan code from the `inst/stan_chunks` directory. The `stanvars` object is used to pass custom stan code to the `brms` package. The `stanvars` object is a list of `brms::stanvar` objects, each of which contains the stan code for a specific part of the model. There is a separate `.stan` file for each part of the stan code, and each file is read into a separate `brms::stanvar` object.
+**Lines 13-22** read the custom stan code from the `inst/stan_chunks` directory. This has to be specified with the system.file() command to ensure that the code is found when the package is installed. The `stanvars` object is used to pass custom stan code to the `brms` package. The `stanvars` object is a list of `brms::stanvar` objects, each of which contains the stan code for a specific part of the model. There is a separate `.stan` file for each part of the stan code, and each file is read into a separate `brms::stanvar` object.
 
 The rest is the same as for the IMM model. 
 
