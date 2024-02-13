@@ -2,10 +2,12 @@
 
 This article aims to help developers contribute new models to bmm. It is a work in progress and will be updated as the package evolves. It explains how to set-up your system for package development, the structure of the package, and the workflow for contributing new models to the package.
 
-We follow a github flow workflow. The repository contains two main branches:
+We follow a [github flow workflow](https://jeffkreeftmeijer.com/git-flow/). The repository contains two main branches:
 
 -   Master (contains the latest released stable version of the `bmm` package
 
 -   Develop (contains the latest stable development branch
 
 All new feature development should occur on an independent branch from Develop. If you want to contribute a new model to the `bmm` package, you need to fork the repository, create a new branch for your model, extensively test the model, and eventually submit a pull request for your changes to be merged into the Develop branch of the main repository. Your changes will be reviewed by someone from the core team. Once your changes are merged into the Develop branch, they will be included in the next release of the package.
+
+![](images/clipboard-674159866.png)
