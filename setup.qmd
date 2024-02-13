@@ -1,4 +1,4 @@
-# System setup  {#sec-setup}
+# System setup {#sec-setup}
 
 ## Setting up a local fork of the bmm repository
 
