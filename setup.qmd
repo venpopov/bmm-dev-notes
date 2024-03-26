@@ -19,9 +19,10 @@ The bmm package is setup as an RStudio project. Opening the `bmm.Rproj` file wil
     ``` r
     install.packages(c("devtools", "roxygen2", "testthat", "knitr"))
     library(devtools)
+    install_dev_deps()
     ```
 
-    To avoid having to load the package every time, you can add the following code to your `.Rprofile` file
+    To avoid having to load the **devtools** package every time, you can add the following code to your `.Rprofile` file
 
     ``` r
     if (interactive()) {
