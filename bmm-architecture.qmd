@@ -11,9 +11,14 @@ bmm <- function(formula, data, model,
                 prior = NULL,
                 sort_data = getOption('bmm.sort_data', "check"),
                 silent = getOption('bmm.silent', 1),
-                backend = getOption('brms.backend', NULL), ...) {
+                backend = getOption('brms.backend', NULL),
+                file = NULL, file_compress = TRUE,
+                file_refit = getOption('bmm.file_refit', FALSE), ...) {
   deprecated_args(...)
   dots <- list(...)
+
+  x <- read_bmmfit(file, file_refit)
+  if (!is.null(x)) return(x)
 
   # set temporary global options and return modified arguments for brms
   configure_opts <- nlist(sort_data, silent, backend, parallel = dots$parallel,
@@ -38,8 +43,11 @@ bmm <- function(formula, data, model,
   fit <- call_brm(fit_args)
 
   # model post-processing
-  postprocess_brm(model, fit, fit_args = fit_args, user_formula = user_formula,
-                  configure_opts = configure_opts)
+  fit <- postprocess_brm(model, fit, fit_args = fit_args, user_formula = user_formula,
+                         configure_opts = configure_opts)
+
+  # save the fitted model object if !is.null
+  save_bmmfit(fit, file, compress = file_compress)
 }
 ```
 
@@ -53,6 +61,8 @@ It calls several subroutines, implemented as generic S3 methods, to:
 -   `configure_prior()` - sets the default priors for the model and combines them with the user prior
 -   `call_brm()` - fit the model using the `brm()` function from the `brms` package
 -   `postprocess_brm()` - to post-process the fitted model
+
+In addition, it also tests if the specified `bmmodel` has already been estimated and saved to a `file`. This is done via the `read_bmmfit` and `save_bmmfit` functions.
 
 ## Models
 
@@ -115,7 +125,7 @@ my_new_model <- function(resp_var1, required_arg1, required_arg2,
 }
 ```
 
-Then users can fit the model using the `fit_model()` function, and the model will be automatically recognized and handled by the package:
+Then users can fit the model using the `bmm()` function, and the model will be automatically recognized and handled by the package:
 
 ``` r
 fit <- bmm(formula = my_bmmformula, 
@@ -133,7 +143,7 @@ configure_model <- function(model) {
 }
 ```
 
-and it will call a function `configure_model.modelname()` that is specified for each model. The same is true for other functions, such as `check_data()`, `postprocess_brm()`, and `check_formula()`. This allows us to add new models without having to edit the main fitting function, `fit_model()`.
+and it will call a function `configure_model.modelname()` that is specified for each model. The same is true for other functions, such as `check_data()`, `postprocess_brm()`, and `check_formula()`. This allows us to add new models without having to edit the main fitting function, `bmm()`.
 
 ## File organization
 
@@ -149,11 +159,13 @@ To add new models, you do not have to edit this file. The functions above are ge
 
 `R/helpers-data.R`, `R/helpers-parameters.R`, `R/helpers-postprocess.R`, `R/helpers-model.R`, and `R/helpers-prior.R`
 
-These files define the main generic S3 methods for checking data, postprocessing the fitted model, configuring the model, checking the model formula, and combining priors. They contain the default methods for these functions, which are called by `bmm()` if no specific method is defined for a model. If you want to add a new model, you will need to add specific methods for these functions for your model. *You do not need to edit these files to add a new model.*
+These files define the main generic S3 methods for checking data, post-processing the fitted model, configuring the model, checking the model formula, and combining priors. They contain the default methods for these functions, which are called by `bmm()` if no specific method is defined for a model. If you want to add a new model, you will need to add specific methods for these functions for your model. *You do not need to edit these files to add a new model.*
 
 ### `R/bmmformula.R` {.unnumbered}
 
-This file contains the definition of the `bmmformula` class, which is used to represent the formula for the model. It contains the `bmmformula()` function and its alias `bmf()`, which is used to create a new formula object. 
+This file contains the definition of the `bmmformula` class, which is used to represent the formula for the model. It contains the `bmmformula()` function and its alias `bmf()`, which is used to create a new formula object.
+
+In addition, it contains the definition of the `bmf2bf` S3 method that is used to convert a `bmmformula` object into a `brms_formula`\`object. This is necessary, as `brmsformula` objects are required to include the response variable in the first formula line. In contrast `bmmformula` objects only contain formulas predicting the paramaeters of a `bmmmodel`. The `bmf2bf` S3 method is used to perform this conversion and add the first formula line and including the response variable in the `brmsformula` created during model configuration.
 
 ### `R/model_*.R` {.unnumbered}
 

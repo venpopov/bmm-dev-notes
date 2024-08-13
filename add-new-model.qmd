@@ -27,7 +27,7 @@ use_model_template(
 #### Arguments {.unnumbered}
 
 | Argument         | Description                                                                                                                                                                                                                                                                                                                                                                                   |
-|---------------------|---------------------------------------------------|
+|----------------------|--------------------------------------------------|
 | `model_name`     | A string with the name of the model. The file will be named bmm_model_model_name.R and all necessary functions will be created with the appropriate names and structure. The file will be saved in the ⁠R/⁠ directory                                                                                                                                                                           |
 | `custom_family`  | Logical; Do you plan to define a brms::custom_family()? If TRUE the function will add a section for the custom family, placeholders for the stan_vars and corresponding empty .stan files in ⁠inst/stan_chunks/⁠, that you can fill For an example, see the sdmSimple model in ⁠/R/bmm_model_sdmSimple.R⁠. If FALSE (default) the function will not add the custom family section nor stan files. |
 | `stanvar_blocks` | A character vector with the names of the blocks that will be added to the custom family section. See brms::stanvar() for more details. The default lists all the possible blocks, but it is unlikely that you will need all of them. You can specify a vector of only those that you need. The function will add a section for each block in the list                                         |
@@ -52,16 +52,15 @@ This will create the file `bmm_model_gcm.R` in the `R/` directory and the files 
 • Modify 'R/model_gcm.R'
 ```
 
-Now you can fill the files with the appropriate code. The stan files will be empty, but the R file will have the following structure:
+Now you can fill the files with the appropriate code. The Stan files will be empty, but the R file will have the following structure:
 
 ``` r
 #############################################################################!
 # MODELS                                                                 ####
 #############################################################################!
-# see file 'R/bmm_model_mixture3p.R' for an example
+# see file 'R/model_mixture3p.R' for an example
 
-.model_gcm <- function(resp_var1 = NULL, required_arg1 = NULL, required_arg2 = NULL, 
-                       links = NULL, version = NULL, call = NULL, ...) {
+.model_gcm <- function(resp_var1 = NULL, required_arg1 = NULL, required_arg2 = NULL, links = NULL, version = NULL, call = NULL, ...) {
    out <- structure(
      list(
        resp_vars = nlist(resp_var1),
@@ -106,9 +105,8 @@ Now you can fill the files with the appropriate code. The stan files will be emp
 gcm <- function(resp_var1, required_arg1, required_arg2, links = NULL, version = NULL, ...) {
    call <- match.call()
    stop_missing_args()
-   .model_gcm(resp_var1 = resp_var1, required_arg1 = required_arg1, 
-              required_arg2 = required_arg2, links = links, version = version, 
-              call = call, ...)
+   .model_gcm(resp_var1 = resp_var1, required_arg1 = required_arg1, required_arg2 = required_arg2,
+                links = links, version = version,call = call, ...)
 }
 
 
@@ -224,17 +222,17 @@ Now you have to:
 
 3.  Fill the `check_data.gcm` function with the appropriate code. This function should check the data and return the data. You may or may not need to compute any transformations or save some variables as attributes of the data.
 
-4.  If necessary define the `bmf2bf.gcm` method to convert the `bmmformula` to a `brmsformula`. The first step for this is always to specify the response variable and additional response information. Keep in mind that `brms` automatically interprets this formula as the linear model formula for the `mu` parameter of your custom family. Currently, `brms` requires all custom families to have a `mu` parameter. However, we recommend to code this parameter as a `void_mu`, and fix the intercept of this parameter to zero using constant priors. This way, the `bmmformula` can be used to only specify the linear or non-linear model for the parameters of a `bmmmodel`. *if your model has a single response variable, you can delete this section.*
+4.  If necessary define the `bmf2bf.gcm` method to convert the `bmmformula` to a `brmsformula`. The first step for this is always to specify the response variable and additional response information. Keep in mind that `brms` automatically interprets this formula as the linear model formula for the `mu` parameter of your custom family. Currently, `brms` requires all custom families to have a `mu` parameter. However, we recommend to code this parameter as a `void_mu`, and fix the intercept of this parameter to zero using constant priors. This way, the `bmmformula` can be used to only specify the linear or non-linear model for the parameters of a `bmmmodel`. *If your model has a single response variable, you can delete this section.*
 
 5.  Fill the `configure_model.gcm` function with the appropriate code. This function should construct the formula, the family, the stanvars. You can also retrieve any arguments you saved from the data check. Depending on your model, some of these parts might not be necessary. For example, for the mixture models (e.g. `mixture3p`), we construct a new formula, because we want to rename the arguments to make it easier for the user. For the `sdmSimple` model, we define the family ourselves, so we don't need to change the formula.
 
-    You need to fill information about your custom family, and then fill the STAN files with your STAN code. Conveniently, you don't have to edit lines 137-145: loading the STAN files and setting up the stanvars is set up automatically when calling the `use_model_template` function. Should you need to add more STAN files after you created the template, you can add the files in `init/stan_chunks/` manually and edit those lines to additionally load the manually added files.
+    You need to fill information about your custom family, and then fill the STAN files with your STAN code. Conveniently, you don't have to edit lines 134-140: loading the STAN files and setting up the stanvars is set up automatically when calling the `use_model_template` function. Should you need to add more STAN files after you created the template, you can add the files in `init/stan_chunks/` manually and edit those lines to additionally load the manually added files.
 
-6.  Fill the `postprocess_brm.gcm` function with the appropriate code. By postprocessing, we mean changes to the fitted brms model - like renaming parameters, etc. If you don't need any postprocessing, you can delete this section.
+6.  Fill the `postprocess_brm.gcm` function with the appropriate code. By post-processing, we mean changes to the fitted brms model - like renaming parameters, etc. If you don't need any post-processing, you can delete this section.
 
 ## Testing
 
-Unit testing is extremely important. You should test your model with the `testthat` package. You can use the `use_test()` function to create a test file for your model. See file `tests/testthat/test-bmm.R` for an example of how we test the existing models. BRMS models take a long time to fit, so we don't test the actual fitting process. `fit_model()` provides an argument `backend="mock"`, which will return a mock object instead of fitting the model. This ensures that the entire pipeline works without errors. For example, here's a test of the `IMMfull` model:
+Unit testing is extremely important. You should test your model with the `testthat` package. You can use the `use_test()` function to create a test file for your model. See file `tests/testthat/test-bmm.R` for an example of how we test the existing models. BRMS models take a long time to fit, so we don't test the actual fitting process. The `bmm()` function provides an argument `backend="mock"`, which will return a mock object instead of fitting the model. This ensures that the entire pipeline works without errors. For example, here's a test of the `IMMfull` model:
 
 ``` r
 test_that('Available mock models run without errors',{
@@ -272,7 +270,7 @@ We are in the process of establishing guidelines for that.
 
 ## Add an example dataset
 
-All new models should come with an example dataset, that can be loaded by users and that can be used in the examples section. This should be one of:
+All new models should come with an example dataset, that can be loaded by users and can be used in the examples section. This should be either:
 
 -   A new dataset that you add to the package
 -   A dataset that already exists in the package but that can be used with the new model
@@ -280,8 +278,8 @@ All new models should come with an example dataset, that can be loaded by users 
 
 For example, the vignettes for the `mixture2p` and `mixture3p` use an external dataset from the `mixtur` package that can be loaded with `data('bays2009_full', package='mixtur')`. The `IMM` models use a dataset included in the current package. For instructions on how to add a new dataset see [here](https://r-pkgs.org/data.html).
 
-## Add a vignette
+## Add an article
 
-All new models should come with a vignette that explains some basic information about the model and how to estimate it with `bmm`. You can use the `use_vignette()` function to create a new vignette. See [here](https://r-pkgs.org/vignettes.html) for more information. The vignettes will be published automatically on the package website under "Articles" when the pull request is approved. You can browse the source code for the existing vignettes in the `vignettes/` directory. You can see the published version of the existing vignettes [here](../articles/).
+All new models should come with an article that explains some basic information about the model and how to estimate it with `bmm`. You can use the `use_article()` function to create a new article. See [here](https://r-pkgs.org/vignettes.html) for more information. The articles will be published automatically on the package website under "Articles" when the pull request is approved. You can browse the source code for the existing articles in the `vignettes/articles/` directory. You can see the published version of the existing vignettes [here](../articles/).
 
 And that's it! You have added a new model to the `bmm` package. You can now submit your changes to the `bmm` package repository.

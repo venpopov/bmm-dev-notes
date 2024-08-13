@@ -1,6 +1,6 @@
 # Example model file {#sec-example-model}
 
-All models in the package are defined as S3 classes and follow a strict template. This allows us to implement general methods for handling model fitting, data checking, and post-processing. Each model has an internal function that defines the model and its parameters, and a user-facing alias. Let's look at how two models are implemented - the IMM model, which uses both general class and specific model methods, but no custom stan code, and the SDM model, which depends heavily on custom stan code. If you use the `use_model_template()` function, all sections bellows will be automatically generated for your model.
+All models in the package are defined as S3 classes and follow a strict template. This allows us to implement general methods for handling model fitting, data checking, and post-processing. Each model has an internal function that defines the model and its parameters, and a user-facing alias. Let's look at how two models are implemented - the IMM model, which uses both general class and specific model methods, but no custom stan code, and the SDM model, which depends heavily on custom stan code. If you use the `use_model_template()` function, templates for all sections below will be automatically generated for your model.
 
 ## The Interference Measurement Model (IMM)
 
@@ -13,7 +13,7 @@ The full IMM model is defined in the following internal model class:
 ``` r
 .model_imm <-
   function(resp_error = NULL, nt_features = NULL, nt_distances = NULL,
-           set_size = NULL, regex = FALSE, links = NULL, version = "full",
+           set_size = NULL, regex = FALSE, version = "full", links = NULL,
            call = NULL, ...) {
     out <- structure(
       list(
@@ -46,8 +46,8 @@ The full IMM model is defined in the following internal model class:
         links = list(
           mu1 = "tan_half",
           kappa = "log",
-          a = "identity",
-          c = "identity",
+          a = "log",
+          c = "log",
           s = "log"
         ),
         fixed_parameters = list(mu1 = 0, mu2 = 0, kappa2 = -100),
@@ -63,7 +63,7 @@ The full IMM model is defined in the following internal model class:
       # attributes
       regex = regex,
       regex_vars = c('nt_features', 'nt_distances'),
-      class = c("bmmodel", "vwm", "non_targets", "imm", paste0('imm_',version)),
+      class = c("bmmodel", "circular", "non_targets", "imm", paste0('imm_',version)),
       call = call
     )
 
@@ -154,15 +154,12 @@ The model alias is a user-facing function that calls the internal model function
 #' @param regex Logical. If TRUE, the `nt_features` and `nt_distances` arguments
 #'   are interpreted as a regular expression to match the non-target feature
 #'   columns in the dataset.
-#' @param links A list of links for the parameters. *Currently does not affect
-#'   the model fits, but it will in the future.*
 #' @param version Character. The version of the IMM model to use. Can be one of
 #'  `full`, `bsc`, or `abc`. The default is `full`.
 #' @param ... used internally for testing, ignore it
 #' @return An object of class `bmmodel`
 #' @keywords bmmodel
-#' @examples
-#' \dontrun{
+#' @examplesIf isTRUE(Sys.getenv("BMM_EXAMPLES"))
 #' # load data
 #' data <- oberauer_lin_2017
 #'
@@ -214,19 +211,21 @@ The model alias is a user-facing function that calls the internal model function
 #'            model = model3,
 #'            cores = 4,
 #'            backend = 'cmdstanr')
-#'}
 #' @export
-imm <- function(resp_error, nt_features, nt_distances, set_size, regex = FALSE,
-                links = NULL, version = "full", ...) {
+imm <- function(resp_error, nt_features, nt_distances, set_size, regex = FALSE, version = "full", ...) {
   call <- match.call()
   dots <- list(...)
+  if ("setsize" %in% names(dots)) {
+    set_size <- dots$setsize
+    warning("The argument 'setsize' is deprecated. Please use 'set_size' instead.")
+  }
   if (version == "abc") {
     nt_distances <- NULL
   }
   stop_missing_args()
   .model_imm(resp_error = resp_error, nt_features = nt_features,
              nt_distances = nt_distances, set_size = set_size, regex = regex,
-             links = links, version = version, call = call, ...)
+             version = version, call = call, ...)
 }
 ```
 
@@ -277,7 +276,6 @@ The configure_model.mymodel() method is where you specify the model formula, the
 (we show only the `IMMfull` version)
 
 ``` r
-#' @export
 configure_model.imm_full <- function(model, data, formula) {
   # retrieve arguments from the data check
   max_set_size <- attr(data, 'max_set_size')
@@ -290,7 +288,7 @@ configure_model.imm_full <- function(model, data, formula) {
   formula <- bmf2bf(model, formula) +
     brms::lf(kappa2 ~ 1) +
     brms::lf(mu2 ~ 1) +
-    brms::nlf(theta1 ~ c + a) +
+    brms::nlf(theta1 ~ log(exp(c) + exp(a))) +
     brms::nlf(kappa1 ~ kappa) +
     brms::nlf(expS ~ exp(s))
 
@@ -302,11 +300,10 @@ configure_model.imm_full <- function(model, data, formula) {
   for (i in 1:(max_set_size - 1)) {
     formula <- formula +
       glue_nlf("{kappa_nts[i]} ~ kappa") +
-      glue_nlf("{theta_nts[i]} ~ {lure_idx[i]} * (exp(-expS*{nt_distances[i]})",
-               " * c + a) + (1 - {lure_idx[i]}) * (-100)") +
+      glue_nlf("{theta_nts[i]} ~ {lure_idx[i]} * log(exp(c-expS*{nt_distances[i]}) + exp(a))",
+               "+ (1 - {lure_idx[i]}) * (-100)") +
       glue_nlf("{mu_nts[i]} ~ {nt_features[i]}")
   }
-
 
   # define mixture family
   formula$family <- brms::mixture(brms::von_mises("tan_half"),
@@ -320,30 +317,19 @@ configure_model.imm_full <- function(model, data, formula) {
 
 The configure_model method should always take the arguments `model`, `data`, and `formula` (as a `bmmformula)` and return a named list with the formula (as a `brmsformula`) and the data. The `brmsfamily` should be stored within the formula.
 
-Inside the configure_model method the `brmsformula` is generated using the `bmf2bf` function. This function converts the `bmmformula` passed to `bmm()` function into a `brmsformula` based on the information for the response variables provided in the `bmmmodel` object. There is a general method in `R/helpers-formula.R` to construct the formula for all models with a single response variable.
+Inside the configure_model method the `brmsformula` is generated using the `bmf2bf` function. This function converts the `bmmformula` passed to `bmm()` function into a `brmsformula` based on the information for the response variables provided in the `bmmmodel` object. There is a general method in `R/bmmformula.R` to construct the formula for all models with a single response variable.
 
 ``` r
-# default method for all bmmmodels with 1 response variable
+# default method to paste the full brms formula for all bmmodels
 #' @export
-bmf2bf.bmmmodel <- function(model, formula) {
+bmf2bf.bmmodel <- function(model, formula) {
   # check if the model has only one response variable and extract if TRUE
-  resp <- model$resp_vars
-  if (length(resp) > 1) {
-    formula <- NextMethod("bmf2bf")
-    return(formula)
-  }
-  resp <- resp[[1]]
-
-  # set base brms formula based on response
-  brms_formula <- brms::bf(paste0(resp, "~ 1"))
+  brms_formula <- NextMethod("bmf2bf")
 
   # for each dependent parameter, check if it is used as a non-linear predictor of
   # another parameter and add the corresponding brms function
-  dpars <- names(formula)
-  for (dpar in dpars) {
-    pform <- formula[[dpar]]
-    predictors <- rhs_vars(pform)
-    if (any(predictors %in% dpars)) {
+  for (pform in formula) {
+    if (is_nl(pform)) {
       brms_formula <- brms_formula + brms::nlf(pform)
     } else {
       brms_formula <- brms_formula + brms::lf(pform)
@@ -351,9 +337,16 @@ bmf2bf.bmmmodel <- function(model, formula) {
   }
   brms_formula
 }
+
+# paste first line of the brms formula for all bmmodels with 1 response variable
+#' @export
+bmf2bf.default <- function(model, formula){
+  # set base brms formula based on response
+  brms::bf(paste0(model$resp_vars[[1]], "~ 1"))
+}
 ```
 
-For models with more than one response variable, you will have to provide a model specific method of `bmf2bf.myModel` to convert the `bmmformula` into the `brmsformula` . This is done to avoid users having to specify complicated and long formulas specifying all additional response information in the `brmsformula` themselves. For more detailed information on the use of additional response information in a `brmsformula` please see the `brmsformula` [documentation](https://rdrr.io/cran/brms/man/brmsformula.html).
+The `bmf2bf.bmmodel` method initializes the conversion of the `bmmformula` to a `brms_formula`. The first step for this is to paste the first line of a `brmsformula` that includes the response as the dependent variable on the left-hand side. For models with a single response variable this is done in the `bmf2bf.default` method. For models with more than one response variable, you will have to provide a model specific method of `bmf2bf.myModel` to convert the `bmmformula` into the `brmsformula` . This conversion from a `bmmformula` object into a `brmsformula` object is done to avoid users having to specify complicated and long formulas or specifying all additional response information in the `brmsformula` themselves. For more detailed information on the use of additional response information in a `brmsformula` please see the `brmsformula` [documentation](https://rdrr.io/cran/brms/man/brmsformula.html).
 
 ## The Signal Discrimination Model (SDM)
 
@@ -362,8 +355,7 @@ The SDM model is defined in the file `R/model_sdm.R`. The SDM model differs in t
 ### Model definition
 
 ``` r
-.model_sdm <- function(resp_error = NULL, links = NULL, 
-                       version = "simple", call = NULL, ...) {
+.model_sdm <- function(resp_error = NULL, links = NULL, version = "simple", call = NULL, ...) {
   out <- structure(
     list(
       resp_vars = nlist(resp_error),
@@ -399,7 +391,7 @@ The SDM model is defined in the file `R/model_sdm.R`. The SDM model differs in t
       ),
       void_mu = FALSE
     ),
-    class = c('bmmodel', 'vwm', 'sdm', paste0("sdm_", version)),
+    class = c('bmmodel', 'circular', 'sdm', paste0("sdm_", version)),
     call = call
   )
   out$links[names(links)] <- links
@@ -411,7 +403,7 @@ The model definition is similar to the IMM model, but the SDM model only require
 
 ### check_data() methods
 
-The SDM shares a class with other `vwm` models, so we most of the data checks are performed by `check_data.vwm` method, defined in the general file `R/helpers-data.R`. The `sdm` however, samples much more quickly in Stan, if the data is sorted by the predictor variables, so we have the following custom data check method for the sdm:
+The SDM shares a class with other `circular` models, so most of the data checks are performed by `check_data.circular` method, defined in the general file `R/helpers-data.R`. The `sdm` however, samples much more quickly in Stan, if the data is sorted by the predictor variables, so we have the following custom data check method for the sdm:
 
 ``` r
 #' @export
@@ -468,11 +460,11 @@ configure_model.sdm <- function(model, data, formula) {
 
 **Lines 17-23** read the custom STAN code from the `inst/stan_chunks` directory. This has to be specified with the system.file() command to ensure that the code is found when the package is installed. The `stanvars` object is used to pass custom STAN code to the `brms` package. The `stanvars` object is a list of `brms::stanvar` objects, each of which contains the STAN code for a specific part of the model. There is a separate `.stan` file for each part of the STAN code, and each file is read into a separate `brms::stanvar` object.
 
-Converting the `bmmformula` to a `brmsformula` and collecting all arguements is the same as for the IMM model.
+Converting the `bmmformula` to a `brmsformula` and collecting all arguments is done entirely using the `bmf2bf` method.
 
-### Postprocessing methods
+### Post-processing methods
 
-Unlike the `imm` model, the `sdm` model requires some special postprocessing because of the way the link functions are coded. These methods are applied *after* the brmsfit object is returned, at the very end of the *bmm()* pipeline:
+Unlike the `imm` model, the `sdm` model requires some special post-processing because of the way the link functions are coded. These methods are applied *after* the brmsfit object is returned, at the very end of the *bmm()* pipeline:
 
 ``` r
 #' @export
@@ -491,7 +483,7 @@ revert_postprocess_brm.sdm <- function(model, fit, ...) {
 }
 ```
 
-we also have a couple of special functions for custom families in brms, which allow other typical tools such posterior_predict of bridgesampling to work:
+we also have a couple of special functions for custom families in brms (see the `log_lik`and `posterior_predict` argument in the call to `brms::custom_familiy()`), which allow other typical tools from `brms` such posterior_predict of bridgesampling to work:
 
 ``` r
 log_lik_sdm_simple <- function(i, prep) {
