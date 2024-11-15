@@ -25,3 +25,14 @@ jobs:
           user-email: vencislav.popov@gmail.com
           target-branch: gh-pages
           target-directory: dev/dev-notes
+      - name: Pushes to another repository (2)
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        with:
+          source-directory: '_book'
+          destination-github-username: 'venpopov'
+          destination-repository-name: 'bmm'
+          user-email: vencislav.popov@gmail.com
+          target-branch: gh-pages
+          target-directory: dev-notes
