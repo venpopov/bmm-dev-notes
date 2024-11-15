@@ -22,9 +22,8 @@ book:
          href: ../news/index.html
        - text: Develop
          href: ../dev-notes/index.html
-
-
-bibliography: references.bib
+       - text: Parameter recovery
+         href: ../parameter-recovery/index.html
 
 format:
   html:
