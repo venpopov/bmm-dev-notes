@@ -2,30 +2,30 @@
 
 ## Setting up a local fork of the bmm repository
 
-1.  Fork the bmm github repository. This will create a copy of the current development branch into your own github account
+1.  Fork the bmm GitHub repository. This creates a copy of the repository in your own GitHub account.
 
     ![](images/clipboard-758253314.png)
 
-2.  [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) your fork to your local machine
+2.  [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) your fork to your local machine.
 
-3.  [Create a new branch](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches) for your model off `develop`. Open an issue first and name the branch after it, as `<issue-number>-short-description` (for example `349-lba-model`). That is what the branches in the main repository look like, and it makes the branch, the issue and the eventual pull request easy to line up.
+3.  Create a branch for your model. Branch from `develop`, or, if the issue for your model is planned for a later release, from that release's integration branch (`dev-x.y.0`); the issue's milestone tells you which. Name the branch after the issue, as `<issue-number>-short-description` (for example `349-lba-model`), so that branch, issue and pull request are easy to line up.
 
 ## Prerequisites
 
-The bmm package requires **R \>= 4.1.0** (for native pipe `|>` support). The package works with both `rstan` and `cmdstanr` backends. `cmdstanr` is generally recommended for faster compilation and better error messages. You can install it with:
+The bmm package requires **R \>= 4.1.0** (for the native pipe `|>`). It works with both the `rstan` and the `cmdstanr` backend. We recommend `cmdstanr`, which compiles faster and gives better error messages, and the tests that compile Stan code need it:
 
 ``` r
 install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev", getOption("repos")))
 cmdstanr::install_cmdstan()
 ```
 
-Once bmm is loaded, `bmm_setup()` checks the C++ toolchain, `cmdstanr` with CmdStan, `rstan`, and the backend `bmm()` will use; it then compiles and samples a small test model and suggests a fix for every check that failed. Run it before your first fit.
+Once bmm is loaded, `bmm_setup()` checks the C++ toolchain, `cmdstanr` with CmdStan, `rstan`, and the backend `bmm()` will use. It then compiles and samples a small test model and suggests a fix for every check that failed. Run it before your first fit.
 
 ## Package development with devtools
 
-Development runs on the `devtools` package, and the steps below are the same whichever editor you work in. The repository ships a `bmm.Rproj` file, so opening it starts a session with the package root as the working directory in RStudio or Positron; opening the directory in any other editor, or starting R in it from a terminal, gets you to the same place. A great tutorial on package development can be found [here](https://r-pkgs.org/). Below is a summary of the most important steps
+Development runs on the `devtools` package, whichever editor you work in. The repository ships a `bmm.Rproj` file, so opening it in RStudio or Positron starts a session in the package root; in any other editor, start R in the repository directory. [R Packages](https://r-pkgs.org/) is the standard tutorial. The steps you will repeat:
 
-1.  Make sure you have the devtools package and a few others installed and loaded
+1.  Install the development tools and bmm's dependencies once:
 
     ``` r
     install.packages(c("devtools", "roxygen2", "testthat", "knitr"))
@@ -33,46 +33,31 @@ Development runs on the `devtools` package, and the steps below are the same whi
     install_dev_deps()
     ```
 
-    Optionally, to avoid loading **devtools** in every session, you can add the following to your `.Rprofile`
-
-    ``` r
-    if (interactive()) {
-      suppressMessages(require(devtools))
-    }
-    ```
-
-    As noted [here](https://r-pkgs.org/setup.html#personal-startup-configuration), you can create and open an `.Rprofile` file, if you don't already have one with
-
-    ``` r
-    use_devtools()
-    ```
-
-2.  Load the current version of the `bmm` package based on your local files
+2.  Load the package from your local files whenever you change the code:
 
     ``` r
     load_all()  # ctrl+shift+L in RStudio
     ```
 
-    you can use this command whenever you make changes to the package code to see the changes in action. You should not call `library(bmm)` or source the files manually, as this will load the installed version of the package, not the one you are developing.
+    Do not call `library(bmm)` or source the files, as that loads the installed version, not the one you are working on.
 
-3.  Make any changes to the package code that you need to make (elaborated in the next section)
-
-4.  Use `check()` to check the package for errors and warnings
+3.  Before you open a pull request, regenerate the documentation, run the tests and check the package, in this order:
 
     ``` r
-    check()
+    document()  # regenerates man/ and NAMESPACE; never edit those by hand
+    test()
+    check()     # 0 errors, 0 warnings; explain any note in the pull request
     ```
 
-    you should always ensure that check() produces no errors before submitting a pull request
+## Running the tests
 
-5.  Use `document()` to update the documentation
+`test()` runs `tests/testthat/` in parallel. Two kinds of test there skip themselves when your machine cannot run them:
 
-    ``` r
-    document()
-    ```
+-   Tests that compile Stan code need CmdStan. Set `BMM_TEST_STAN=false` in your environment to skip them deliberately.
+-   Tests that read a stored fit need `tests/testthat/assets/`, which is left out of the built package, so they skip inside `check()`.
+
+Tests that actually sample live in `tests/local/` and never run in `test()` or `check()`. Run them with `Rscript tests/local/run.R` when your change touches fitting. Run `test(reporter = "slow")` before a pull request as well: the suite has a time budget that CI enforces, and this reporter shows which of your tests are slow. @sec-add-new-model says which tests a new model needs.
 
 ## Untracked scratch work
 
-Development produces files that belong on your machine rather than in the package: exploratory scripts, fitted model objects, scratch data. bmm's `.gitignore` excludes `local/` for this purpose — `AGENTS.md` describes it as machine-specific scratch that is neither synced nor shared — so anything you put there stays out of your commits. Nothing requires you to use it; any location git ignores will do.
-
-Parameter recovery scripts are the main thing you will keep out of the package this way. What the study has to show, and how it reaches the reviewer given that it is not committed, is in @sec-conventions.
+Development produces files that belong on your machine rather than in the package: exploratory scripts, fitted model objects, scratch data. bmm's `.gitignore` excludes a `local/` folder at the root of the repository for this purpose, so anything you put there stays out of your commits. (`tests/local/` is a different folder and is tracked.) Your parameter recovery script can live there, but the reviewer has to see its results; @sec-conventions says how.
