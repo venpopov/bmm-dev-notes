@@ -71,6 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./reference.html" rel="next">
 <link href="./add-new-model.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -184,7 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./git-workflow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Git and Github workflow</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Git and GitHub workflow</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -196,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./example-model.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Example model file</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Example models</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -211,6 +212,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Coding conventions</span></span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Reference</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -227,12 +245,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#s3-conventions" id="toc-s3-conventions" class="nav-link" data-scroll-target="#s3-conventions"><span class="header-section-number">6.4</span> S3 conventions</a></li>
   <li><a href="#where-to-validate-arguments" id="toc-where-to-validate-arguments" class="nav-link" data-scroll-target="#where-to-validate-arguments"><span class="header-section-number">6.5</span> Where to validate arguments</a></li>
   <li><a href="#log_lik-posterior_predict-and-posterior_epred" id="toc-log_lik-posterior_predict-and-posterior_epred" class="nav-link" data-scroll-target="#log_lik-posterior_predict-and-posterior_epred"><span class="header-section-number">6.6</span> <code>log_lik</code>, <code>posterior_predict</code> and <code>posterior_epred</code></a></li>
-  <li><a href="#naming-traps" id="toc-naming-traps" class="nav-link" data-scroll-target="#naming-traps"><span class="header-section-number">6.7</span> Naming traps</a></li>
-  <li><a href="#documentation-and-the-checks-that-enforce-it" id="toc-documentation-and-the-checks-that-enforce-it" class="nav-link" data-scroll-target="#documentation-and-the-checks-that-enforce-it"><span class="header-section-number">6.8</span> Documentation and the checks that enforce it</a></li>
-  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests"><span class="header-section-number">6.9</span> Tests</a>
-  <ul class="collapse">
-  <li><a href="#parameter-recovery-and-the-circularity-trap" id="toc-parameter-recovery-and-the-circularity-trap" class="nav-link" data-scroll-target="#parameter-recovery-and-the-circularity-trap"><span class="header-section-number">6.9.1</span> Parameter recovery, and the circularity trap</a></li>
-  </ul></li>
+  <li><a href="#documentation-and-the-checks-that-enforce-it" id="toc-documentation-and-the-checks-that-enforce-it" class="nav-link" data-scroll-target="#documentation-and-the-checks-that-enforce-it"><span class="header-section-number">6.7</span> Documentation and the checks that enforce it</a></li>
+  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests"><span class="header-section-number">6.8</span> Tests</a></li>
+  <li><a href="#parameter-recovery-the-circularity-trap" id="toc-parameter-recovery-the-circularity-trap" class="nav-link" data-scroll-target="#parameter-recovery-the-circularity-trap"><span class="header-section-number">6.9</span> Parameter recovery: the circularity trap</a></li>
   </ul>
 </nav>
     </div>
@@ -258,7 +273,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This chapter is the reference for how bmm code is written. It exists because your pull request will be judged against these conventions, and until now they lived mainly in the repository’s <code>AGENTS.md</code>, which an outside contributor has no particular reason to open.</p>
+<p>This chapter is the reference for how bmm code is written. Your pull request will be judged against these conventions. The Coding style section of bmm’s CONTRIBUTING.md and its <code>AGENTS.md</code> state them briefly; this chapter gives the reasons.</p>
 <p>Read it as conventions, not as a style war. Most of the entries have a reason attached, and the reason is usually that the alternative broke something.</p>
 <section id="errors-warnings-and-messages" class="level2" data-number="6.1">
 <h2 data-number="6.1" class="anchored" data-anchor-id="errors-warnings-and-messages"><span class="header-section-number">6.1</span> Errors, warnings and messages</h2>
@@ -298,16 +313,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>One line, and reads as the condition it guards</td>
 </tr>
 <tr class="odd">
+<td><code>stopifnot()</code></td>
+<td><code>stopif(cond, ...)</code></td>
+<td><code>stopifnot()</code> messages name the failed expression, not the user’s argument</td>
+</tr>
+<tr class="even">
 <td><code>if (cond) warning2(...)</code></td>
 <td><code>warnif(cond, ...)</code></td>
 <td>Same</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>sprintf()</code> in a message</td>
 <td><code>glue::glue()</code></td>
 <td>Named interpolation, no positional arguments to miscount</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>paste(x, collapse = ", ")</code></td>
 <td><code>collapse_comma(x)</code></td>
 <td>Also quotes each element</td>
@@ -347,8 +367,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-label="3"></a>  <span class="fu">return</span>(x)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-label="4"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Do not write <code>return(out)</code> as the last line of a function.</p>
-<p><strong>No <code>set.seed()</code> inside a function, and no <code>seed</code> argument.</strong> A function that sets the seed silently rewrites the caller’s random state. <code>set.seed()</code> appears in bmm only in <code>@examples</code> blocks in the roxygen comments — the <code>#'</code> comments above each function from which <code>devtools::document()</code> generates the help pages — where it is the right thing. If you need reproducibility inside a function, take the draws you were given; if you need it in a test, set the seed in the test.</p>
-<p><strong>snake_case</strong> for functions and variables. Private helpers are prefixed with a dot (<code>.base_imm_formula</code>, <code>.imm_mixture_family</code>). One reservation: a private helper must <strong>not</strong> be named <code>.model_*</code>, because <code>supported_models()</code> lists every object matching <code>^\.model_</code> as a model.</p>
+<p><strong>No <code>set.seed()</code> inside a function, and no <code>seed</code> argument.</strong> A function that sets the seed silently rewrites the caller’s random state. <code>set.seed()</code> appears in bmm only in <code>@examples</code> blocks in the roxygen comments — the <code>#'</code> comments above each function from which <code>devtools::document()</code> generates the help pages — where it is the right thing. If you need reproducibility inside a function, take the draws you were given; in a test, use <code>withr::local_seed()</code>.</p>
+<p><strong>snake_case</strong> for functions and variables. Private helpers are prefixed with a dot (<code>.base_imm_formula</code>, <code>.imm_mixture_family</code>). One reservation: a private helper must <strong>not</strong> be named <code>.model_*</code>, because <code>model_names()</code> lists every object matching <code>^\.model_</code> as a model.</p>
 <p><strong>Comments say why, not what.</strong> <code># construct the family</code> above a <code>brms::custom_family()</code> call adds nothing. The comment in <code>configure_model.sdm()</code> —<code># note - c has a log link, but I've coded it manually for computational efficiency</code> — is worth its line, and so is every comment that records a constraint somebody would otherwise remove.</p>
 </section>
 <section id="s3-conventions" class="level2" data-number="6.4">
@@ -411,45 +431,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="R/model_sdt_yn.R" data-bmm-src="posterior_epred_sdt_yn"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-label="1"></a>posterior_epred_sdt_yn <span class="ot">&lt;-</span> <span class="cf">function</span>(prep) {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-label="2"></a>  stimulus <span class="ot">&lt;-</span> <span class="fu">.epred_data</span>(prep<span class="sc">$</span>data<span class="sc">$</span>vint1, prep)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-label="3"></a>  dist <span class="ot">&lt;-</span> .sdt_dist_names[prep<span class="sc">$</span>data<span class="sc">$</span>vint2[<span class="dv">1</span>]]</span>
-<span id="cb8-4"><a href="#cb8-4" aria-label="4"></a>  p_old <span class="ot">&lt;-</span> <span class="fu">with</span>(prep<span class="sc">$</span>dpars, <span class="fu">exp</span>(<span class="fu">.sdt_log_p_old</span>(<span class="fu">.sdt_eta</span>(d, criterion, stimulus, sdratio), dist)))</span>
-<span id="cb8-5"><a href="#cb8-5" aria-label="5"></a>  <span class="fu">.epred_matrix</span>(<span class="fu">.epred_data</span>(prep<span class="sc">$</span>data<span class="sc">$</span>trials, prep) <span class="sc">*</span> p_old, prep)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-label="6"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-4"><a href="#cb8-4" aria-label="4"></a>  criterion <span class="ot">&lt;-</span> <span class="fu">.sdt_criterion_dpar</span>(prep, prep<span class="sc">$</span>dpars<span class="sc">$</span>d, prep<span class="sc">$</span>dpars<span class="sc">$</span>sdratio)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-label="5"></a>  p_old <span class="ot">&lt;-</span> <span class="fu">with</span>(prep<span class="sc">$</span>dpars, <span class="fu">exp</span>(<span class="fu">.sdt_log_p_old</span>(<span class="fu">.sdt_eta</span>(d, criterion, stimulus, sdratio), dist)))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-label="6"></a>  <span class="fu">.epred_matrix</span>(<span class="fu">.epred_data</span>(prep<span class="sc">$</span>data<span class="sc">$</span>trials, prep) <span class="sc">*</span> p_old, prep)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-label="7"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Pass it to <code>custom_family()</code> like the other two. A custom family without one fails in <code>posterior_epred()</code> with “object ‘posterior_epred_<name>’ not found”, because brms looks for the function in the global environment. If the expected response of your model is not meaningful, pass <code>posterior_epred_undefined("&lt;model&gt;")</code>, which fails with a message pointing to <code>native_parameters()</code>.</name></p>
-<p><code>loop</code> in <code>custom_family()</code> is about the generated <em>Stan</em> code, not about this R function. With <code>loop = FALSE</code> brms emits a vectorized likelihood call, and with <code>loop = TRUE</code> it emits one call per observation. The consequence you will hit concerns <code>vars</code>, the <code>custom_family()</code> argument that names extra Stan variables your likelihood needs beyond the parameters (aggregate counts, trial numbers). With <code>loop = FALSE</code> you may not index those with <code>[n]</code>, because there is no per-observation loop to index inside, and brms stops with “Invalid use of index ‘[n]’ in an unlooped custom likelihood”. SDM uses <code>loop = FALSE</code> and no <code>vars</code>; EZDM uses <code>loop = TRUE</code> with <code>vars = c("vreal1[n]", "vint1[n]", "trials[n]")</code>.</p>
+<p>For a custom family on aggregated data, <code>loop</code> and <code>vars</code> decide what the Stan likelihood can index; see <a href="reference.html#sec-aggregate-data" class="quarto-xref"><span>Section A.4</span></a>. The names you give a family’s parameters have traps of their own (<a href="reference.html#sec-naming-traps" class="quarto-xref"><span>Section A.8</span></a>).</p>
 </section>
-<section id="naming-traps" class="level2" data-number="6.7">
-<h2 data-number="6.7" class="anchored" data-anchor-id="naming-traps"><span class="header-section-number">6.7</span> Naming traps</h2>
-<p>Each of these cost somebody real debugging time, and none of them produce an error message that points at the cause.</p>
-<p><strong>A custom family’s <code>dpars</code> may not contain <code>_</code> or <code>.</code>, and may not end with a digit.</strong> Both are checked in <code>brms::custom_family()</code> (brms 2.23.0): “Dots or underscores are not allowed in ‘dpars’” and “‘dpars’ should not end with a number”. So neither <code>delta_1</code> nor <code>delta1</code> is a legal dpar name. The digits you see on IMM parameters (<code>kappa1</code>, <code>theta3</code>, <code>mu2</code>) are generated by <code>brms::mixture()</code> itself, not declared by bmm, and non-linear parameters introduced through <code>nlf()</code> are not subject to this check.</p>
-<p><strong>Reusing a brms dpar name silently inherits its default prior.</strong> <code>brms:::def_dpar_prior()</code> attaches a default prior by dpar name (the three colons reach an unexported function, which is why you will not find it in brms’ documentation), and the names it recognizes are <code>mu</code>, <code>sigma</code>, <code>shape</code>, <code>nu</code>, <code>phi</code>, <code>kappa</code>, <code>beta</code>, <code>zi</code>, <code>hu</code>, <code>zoi</code>, <code>coi</code>, <code>bs</code>, <code>ndt</code>, <code>bias</code>, <code>quantile</code>, <code>xi</code>, <code>alpha</code>, <code>disc</code> and <code>theta</code>. Worse, the lookup goes through <code>brms:::dpar_class()</code>, which strips trailing digits, so <code>kappa1</code> is looked up as <code>kappa</code>. bmm reuses several of these names deliberately and sets its own defaults over the top, which is fine — the trap is a parameter you reuse and then <em>forget</em> to give a default prior, which will quietly get brms’ prior for an unrelated quantity.</p>
-<p><strong>A dpar must not be uniquely prefixed by <code>thres</code>.</strong> <code>brms:::stan_log_lik_custom()</code> assigns <code>p$thres</code> only for ordinal families but reads <code>p$thres</code> unconditionally when it builds the likelihood call. <code>p</code> is a list keyed by dpar name, and <code>$</code> partial-matches on lists, so a dpar named <code>threshold</code> is found by <code>p$thres</code> and passed where the ordinal thresholds belong. The result is Stan code that does not parse, from a name that looks perfectly reasonable.</p>
-<p><strong>Stan probability-function suffixes require the bar syntax at every call site.</strong> <code>stanc</code>, the Stan compiler, says it plainly (version 2.39):</p>
-<blockquote class="blockquote">
-<p>Probability functions with suffixes <code>_lpdf</code>, <code>_lupdf</code>, <code>_lpmf</code>, <code>_lupmf</code>, <code>_cdf</code>, <code>_lcdf</code> and <code>_lccdf</code>, require a vertical bar (|) between the first two arguments.</p>
-</blockquote>
-<p>A helper you name <code>sdt_cdf</code> therefore cannot be called as <code>sdt_cdf(x, mu)</code>; it has to be <code>sdt_cdf(x | mu)</code>. If the function is not really a distribution function, give it a different name — <code>sdt_cumprob</code> — and the problem disappears. bmm’s own distribution functions take the other route and use the bar: <code>swald_lpdf(rt | drift, bound, ndt, s)</code> and <code>swald_lccdf(rt | -drift, bound_lower, ndt, s)</code> in <code>inst/stan_chunks/cswald_*.stan</code>.</p>
-<p><strong>An <code>nlf()</code> right-hand side is pasted together as text</strong>, so operator precedence is yours to manage. The IMM builds its <code>theta</code> expressions with glue and parenthesizes every sub-expression, including the constant: <code>"{lure_idx} * (-expS*{nt_distances} + c) + (1 - {lure_idx}) * (-100)"</code> (in <code>configure_model.imm_full()</code>). When you interpolate an expression into a larger one, wrap it.</p>
-</section>
-<section id="documentation-and-the-checks-that-enforce-it" class="level2" data-number="6.8">
-<h2 data-number="6.8" class="anchored" data-anchor-id="documentation-and-the-checks-that-enforce-it"><span class="header-section-number">6.8</span> Documentation and the checks that enforce it</h2>
+<section id="documentation-and-the-checks-that-enforce-it" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="documentation-and-the-checks-that-enforce-it"><span class="header-section-number">6.7</span> Documentation and the checks that enforce it</h2>
 <p><code>NAMESPACE</code> and everything in <code>man/</code> are <strong>generated</strong>. Run <code>devtools::document()</code>; never hand-edit them.</p>
 <p>Exported functions need <code>@returns</code> and <code>@examples</code>. Two further requirements are enforced by tests rather than by review:</p>
 <p><strong><code>@keywords</code>.</strong> The package website is built by pkgdown, which needs every public help topic to appear somewhere in its reference index, and <code>_pkgdown.yml</code> is where that index is declared. <code>tests/testthat/test-pkgdown.R</code> reads every <code>man/*.Rd</code> file, drops the ones with <code>\keyword{internal}</code>, and fails if any remaining topic is not covered by the reference section of <code>_pkgdown.yml</code>. Coverage can be by name or through a <code>has_keyword()</code> selector, and <code>_pkgdown.yml</code> has <code>has_keyword("bmmodel")</code>. So a new model’s user-facing alias needs <code>#' @keywords bmmodel</code>, which every model alias carries and which <code>use_model_template()</code> generates. Keep it when you edit the roxygen block. An exported function that is not a model gets <code>@keywords internal</code> or a place in <code>_pkgdown.yml</code>.</p>
-<p><strong>A NEWS entry for every user-visible change</strong>, under the right heading in <code>NEWS.md</code>, with the issue or PR number in parentheses. Read the most recent section for the expected level of detail: entries say what changed, what the old behaviour was, and why it mattered, not just “fixed a bug”.</p>
+<p><strong>A NEWS bullet for every user-visible change</strong>, under the development heading at the top of <code>NEWS.md</code> (on a <code>dev-x.y.0</code> branch, under that release’s heading), with the issue or pull request number in parentheses. Keep it short: what changes for the user and what they should do, not how the fix works.</p>
 </section>
-<section id="tests" class="level2" data-number="6.9">
-<h2 data-number="6.9" class="anchored" data-anchor-id="tests"><span class="header-section-number">6.9</span> Tests</h2>
-<p>Test files mirror source file names — <code>R/model_ddm.R</code> is tested by <code>tests/testthat/test-model_ddm.R</code>. This is a convention rather than a rule: some test files cover a theme (<code>test-default-priors.R</code>, <code>test-pkgdown.R</code>) rather than a file. A new model gets a matching test file.</p>
-<p>Use brms’ mock backend for pipeline tests (<a href="add-new-model.html" class="quarto-xref"><span>Chapter 5</span></a> explains what it is and the two ways to get the call wrong) and <code>testthat</code> edition 3 (<code>Config/testthat/edition: 3</code> in <code>DESCRIPTION</code>). Set <code>withr::local_options("bmm.silent" = 2)</code> so <code>message2()</code> output does not clutter the run.</p>
-<section id="parameter-recovery-and-the-circularity-trap" class="level3" data-number="6.9.1">
-<h3 data-number="6.9.1" class="anchored" data-anchor-id="parameter-recovery-and-the-circularity-trap"><span class="header-section-number">6.9.1</span> Parameter recovery, and the circularity trap</h3>
-<p>A new model needs a parameter recovery study. It is not part of the package sources, so it is not run by <code>R CMD check</code> and does not need to be fast. Report it in the pull request: the script, what generated the data, and the values you recovered. Where you keep the script is up to you — bmm’s <code>.gitignore</code> excludes <code>local/</code> for exactly this kind of scratch work (<a href="setup.html" class="quarto-xref"><span>Chapter 1</span></a>) — but a study the reviewer cannot see does not count as one.</p>
-<p><strong>Do not simulate and fit with the same distribution function.</strong> If you generate data with your own <code>rmymodel()</code> and then fit a likelihood built from your own <code>dmymodel()</code>, the study will report clean recovery whether or not either function is correct — any error shared by both cancels. Use an independent generator: <code>rtdists::rdiffusion()</code> for diffusion-type models (<code>rtdists</code> is already an Imports), a published reference implementation, or a direct simulation of the process the model describes. A recovery study that cannot fail is not evidence.</p>
-<p>Recover both the hyper-parameters (means and standard deviations) and the subject-level parameters, and report how much data was needed, because that is the question a user will ask.</p>
+<section id="tests" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="tests"><span class="header-section-number">6.8</span> Tests</h2>
+<p>Test files mirror source file names: <code>R/model_ddm.R</code> is tested by <code>tests/testthat/test-model_ddm.R</code>. Some files cover a theme instead (<code>test-default-priors.R</code>, <code>test-pkgdown.R</code>). Tests use <code>testthat</code> edition 3, the mock backend instead of sampling, and <code>withr::local_options("bmm.silent" = 2)</code> so that <code>message2()</code> output does not clutter the run. The rules that apply to every test are numbered R1 to R10 in <code>AGENTS.md</code>; <a href="add-new-model.html" class="quarto-xref"><span>Chapter 5</span></a> lists the ones a new model meets.</p>
+</section>
+<section id="parameter-recovery-the-circularity-trap" class="level2" data-number="6.9">
+<h2 data-number="6.9" class="anchored" data-anchor-id="parameter-recovery-the-circularity-trap"><span class="header-section-number">6.9</span> Parameter recovery: the circularity trap</h2>
+<p>What a recovery study for a new model has to show is set out in CONTRIBUTING.md: true against recovered values, a hierarchical design with several subjects, and data from an independent generator. The last point is the one that is easy to get wrong.</p>
+<p><strong>Do not simulate and fit with the same distribution function.</strong> If you generate data with your own <code>rmymodel()</code> and fit a likelihood built from your own <code>dmymodel()</code>, the study reports clean recovery whether or not either function is correct, because any error shared by both cancels. Use an independent generator: <code>rtdists::rdiffusion()</code> for diffusion-type models (<code>rtdists</code> is already in Imports), a published reference implementation, or a direct simulation of the process the model describes. A recovery study that cannot fail is not evidence.</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -860,6 +866,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="./reference.html" class="pagination-link" aria-label="Reference">
+        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Reference</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->
