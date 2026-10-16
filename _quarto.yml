@@ -11,6 +11,8 @@ book:
     - example-model.qmd
     - add-new-model.qmd
     - coding-conventions.qmd
+  appendices:
+    - reference.qmd
   navbar:
     background: primary
     search: true
