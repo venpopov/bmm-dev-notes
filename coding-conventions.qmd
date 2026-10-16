@@ -145,6 +145,7 @@ A density function that collapses its arguments (an `if` on a vector, a `sum()`)
 posterior_epred_sdt_yn <- function(prep) {
   stimulus <- .epred_data(prep$data$vint1, prep)
   dist <- .sdt_dist_names[prep$data$vint2[1]]
+  criterion <- .sdt_criterion_dpar(prep, prep$dpars$d, prep$dpars$sdratio)
   p_old <- with(prep$dpars, exp(.sdt_log_p_old(.sdt_eta(d, criterion, stimulus, sdratio), dist)))
   .epred_matrix(.epred_data(prep$data$trials, prep) * p_old, prep)
 }
