@@ -32,7 +32,7 @@ Every fenced R block that quotes bmm carries its source:
 
 `filename=` is a Quarto feature and shows the reader which file the block came from. `bmm-src=` (comma-separated for a block with several definitions) is what the checker resolves. Extra attributes reach the HTML as `data-*` and are dropped by the LaTeX writer, so the PDF is unaffected.
 
-A block that elides on purpose is marked `bmm-excerpt="abridged"`. It must still resolve — the name has to exist in bmm — but its body is not compared. There are four of these, each also carrying a visible `...` in the code.
+A block that elides on purpose is marked `bmm-excerpt="abridged"`. It must still resolve — the name has to exist in bmm — but its body is not compared. The drift check reports how many there are. Each also carries a visible `...` in the code.
 
 Two things the checker will not do: it will not skip an anchor it cannot resolve (that is always an error, because silent skipping on rename is how these checkers stop working), and it will not verify prose claims other than package paths and identifiers matching bmm's own naming conventions.
 
