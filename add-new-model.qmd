@@ -95,7 +95,7 @@ This creates `R/model_gcm.R` and the empty files `inst/stan_chunks/gcm_likelihoo
 # settable_links.gcm <- function(model) character(0)
 ```
 
-Above the specification, a header comment lists the registries outside the file that a new model must update and the format `citation` must follow. One line of that header is out of date in bmm 1.4.1: the stored-frame test case no longer goes into `stored_frame_cases()` in `test-update.R` but into your model's test-case file (see [Before you open the pull request]). Below it come the user-facing alias `gcm()` with its roxygen block, and the stubs `check_data.gcm()`, `bmf2bf.gcm()`, `configure_model.gcm()` (with a `custom_family()` skeleton and the lines that read your two Stan files), `log_lik_gcm()`, `posterior_predict_gcm()`, `posterior_epred_gcm()` and `postprocess_brm.gcm()`. The `check_data`, `bmf2bf` and `postprocess_brm` stubs carry a header comment saying when you may delete them.
+Above the specification, a header comment lists the registries outside the file that a new model must update and the format `citation` must follow. One line of that header is out of date in bmm 1.4.1: the stored-frame test case no longer goes into `stored_frame_cases()` in `test-update.R` but into your model's test-case file (see [Testing]). The other entries, `data_column_roles`, `revert_check_data()`, `response_annotations()` and the `citation` format, are correct. Below it come the user-facing alias `gcm()` with its roxygen block, and the stubs `check_data.gcm()`, `bmf2bf.gcm()`, `configure_model.gcm()` (with a `custom_family()` skeleton and the lines that read your two Stan files), `log_lik_gcm()`, `posterior_predict_gcm()`, `posterior_epred_gcm()` and `postprocess_brm.gcm()`. The `check_data`, `bmf2bf` and `postprocess_brm` stubs carry a header comment saying when you may delete them.
 
 For a complete model written to the current conventions, read `R/model_sdt_yn.R`: a custom family on aggregated counts, with its own `log_lik`, `posterior_predict` and `posterior_epred` functions and a `settable_links` method. Most of its length is documentation.
 
@@ -133,7 +133,26 @@ For a complete model written to the current conventions, read `R/model_sdt_yn.R`
 A new model adds two files to `tests/testthat/`:
 
 -   **`test-model_gcm.R`** tests your model's own contract: constructor validation, `check_data()`, `configure_model()`, the content of the generated Stan code, and your `d*`/`r*` functions. `tests/testthat/test-model_ddm.R` and `test-model_sdt_yn.R` are examples.
--   **`helper-model-gcm.R`** registers your model with the tests that run over every model (default priors, initial values, `update()`, links, posterior predictive checks). It defines one function, `model_cases_gcm()`, which returns small cases those tests use. A `stored_frame`, an `sd_default`, an `init` and a `links` case are required; `check_data`, `observables` and `fixture` cases apply only to some models. Copy `tests/testthat/helper-model-ddm.R` and adapt it. The header of `helper-model-cases.R` says what each case holds.
+-   **`helper-model-gcm.R`** registers your model with the tests that run over every model (default priors, initial values, `update()`, links, posterior predictive checks). It defines one function, `model_cases_gcm()`, which returns small cases those tests use. A `stored_frame`, an `sd_default`, an `init` and a `links` case are required; `check_data`, `observables` and `fixture` cases apply only to some models. Copy `tests/testthat/helper-model-ddm.R` and adapt it. For a model without random-effect quirks or extra observables, it looks like this:
+
+    ``` r
+    model_cases_gcm <- function() {
+      model <- gcm("resp", "exemplar", "category")
+      data <- toy_gcm_data()  # write a small dataset next to those in helper-model-data.R
+      re_formula <- bmf(par1 ~ 1 + (1 | id), par2 ~ 1 + (1 | id))
+      list(
+        stored_frame = list(gcm = list(model = model, formula = bmf(par1 ~ 1, par2 ~ 1), data = data)),
+        sd_default = list(gcm = list(
+          model = model, formula = re_formula, data = data,
+          sd = c(par1 = "exponential(1)", par2 = "exponential(2)")
+        )),
+        init = list(gcm = list(model = model, formula = re_formula, data = data)),
+        links = list(gcm = list(model = model, settable = c("par1", "par2")))
+      )
+    }
+    ```
+
+    `sd` repeats your default `sd` priors and `settable` what `settable_links()` returns. The header of `helper-model-cases.R` describes the optional cases.
 
 Tests must not sample, so pipeline tests use brms' mock backend. `backend = "mock"` is a `brms::brm()` argument, and whatever you pass as `mock_fit` is returned in place of the fitted Stan object. Everything before the fit (data checks, formula, family, Stan code, priors, initial values) runs for real, which is what you want to test:
 
@@ -171,7 +190,7 @@ The rest of the rules are numbered R1 to R10 in bmm's [AGENTS.md](https://github
 
 ### Parameter recovery
 
-A new model needs a parameter recovery study on simulated data, reported in the pull request. What it has to show is in [CONTRIBUTING.md](https://github.com/popov-lab/bmm/blob/develop/.github/CONTRIBUTING.md); @sec-conventions explains the one mistake that makes a recovery study worthless.
+A new model needs a parameter recovery study on simulated data. The pull request description shows true against recovered values, as a table or a plot, from a hierarchical design with several subjects whose parameters vary, on data simulated with an independent generator rather than your own `r*` function. Attach the script as a gist or in a collapsed block. @sec-conventions explains why the generator matters, and [CONTRIBUTING.md](https://github.com/popov-lab/bmm/blob/develop/.github/CONTRIBUTING.md) has the requirements.
 
 ### Distribution functions
 

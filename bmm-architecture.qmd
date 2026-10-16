@@ -8,15 +8,15 @@ You do not have to edit any of the files described here to add a model: `use_mod
 
 ``` text
 bmm(formula, data, model)
-├─ configure_fit()              R/helpers-model.R
-│   ├─ check_model()            is the model valid, are the user's links allowed
-│   ├─ check_data()             validate and transform the data     <- model method
-│   ├─ check_formula()          one formula per parameter
-│   ├─ configure_model()        brms formula, family, Stan code     <- model method
-│   ├─ configure_prior()        default priors + the user's prior
-│   └─ create_initfun()         initial values for the sampler
-├─ brms::brm()                  compile and sample
-└─ postprocess_brm()            rename, store metadata              <- optional model method
+|- configure_fit()              R/helpers-model.R
+|   |- check_model()            is the model valid, are the user's links allowed
+|   |- check_data()             validate and transform the data     <- model method
+|   |- check_formula()          one formula per parameter
+|   |- configure_model()        brms formula, family, Stan code     <- model method
+|   |- configure_prior()        default priors + the user's prior
+|   `- create_initfun()         initial values for the sampler
+|- brms::brm()                  compile and sample
+`- postprocess_brm()            rename, store metadata              <- optional model method
 ```
 
 `configure_fit()` holds the whole configuration sequence:

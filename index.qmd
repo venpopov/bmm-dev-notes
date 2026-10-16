@@ -8,6 +8,15 @@ bmm covers five kinds of tasks: continuous reproduction (mixture models, IMM, SD
 
 This guide describes bmm at the **v1.4.1** tag. Anything merged after that tag may not be reflected here yet. If you run into problems, [open an issue on GitHub](https://github.com/popov-lab/bmm/issues).
 
+## From idea to merged model {.unnumbered}
+
+1.  Open an issue with the [`new_model` template](https://github.com/popov-lab/bmm/issues/new?template=new_model.md) and agree with the maintainers on the model and the release it targets.
+2.  Fork bmm, set up your system and create a branch named after the issue (@sec-setup).
+3.  Generate the model file with `use_model_template()` and fill it in (@sec-add-new-model). Write the distribution functions first and the prediction functions after.
+4.  Add the model's tests and its test cases, and run `document()`, `test()` and `check()`.
+5.  Run a parameter recovery study, and add an example dataset, an article and a NEWS bullet.
+6.  Open the pull request against the branch you started from and fill in the template (@sec-add-new-model has the checklist).
+
 ## How to read these notes {.unnumbered}
 
 1.  [System setup](setup.qmd) and [Git workflow](git-workflow.qmd) get you a working fork.
