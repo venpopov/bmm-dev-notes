@@ -1,0 +1,152 @@
+# Reference {#sec-reference}
+
+This appendix collects details you need only in particular situations. Each section starts by saying when that is.
+
+## Links {#sec-links}
+
+*You need this when your model's links cannot all be changed by the user, or when a user reports that a link they set had no effect.*
+
+bmm implements the links `"identity"`, `"log"`, `"softplus"`, `"log1p"`, `"logm1"`, `"inverse"`, `"sqrt"`, `"logit"`, `"probit"`, `"cloglog"` and `"tan_half"`. A model may also declare `"loglog"` or `"softmax"` as its own default, but users cannot ask for them. `"softplus"` is an alternative to `"log"` for positive parameters: it grows linearly rather than exponentially, so predictor effects are additive on the natural scale and large values do not overflow.
+
+The constructor assigns the user's links with `set_links()`. It refuses a name that is not a parameter (a one-letter typo is repaired, with a warning), refuses a link the model cannot apply, and warns when the new link admits values the default excludes, such as `identity` for a positive parameter. `check_model()` runs the same validation on links assigned after construction.
+
+By default every link can be changed. A model that writes its links into the family, the Stan code or the non-linear formulas, instead of reading them from `model$links` at fit time, must say so with a `settable_links()` method that returns `character(0)` or the subset that works. Otherwise a user's link would show in `print()` and in the priors while the sampler ignored it. SDM, the mixture models and the IMM return `character(0)`; the SDT models return the parameters whose links reach the likelihood. A model that substitutes the inverse link into its formulas itself also overrides `settable_link_functions()`, as M3, MPT and the multinomial SDT models do.
+
+## Models without a location parameter {#sec-suppress-mu}
+
+*You need this when your model has no natural `mu`, as is typical for response time models.*
+
+brms requires every custom family to have a `mu` parameter. DDM, EZDM and cswald have none, and suppress it rather than promote one of their parameters to it:
+
+1.  The family's `dpars` include a dummy `mu` with an `identity` link.
+2.  `fixed_parameters` contains `mu = 0`.
+3.  `mu` is left out of `parameters`, so `prior_info()` and `parameter_info()` do not report it, and users do not give it a formula.
+4.  The model's `bmf2bf()` method writes the first formula line itself, such as `rt | dec(response) ~ 1` for the DDM.
+
+If you add `mu = 0` to `fixed_parameters` but forget the dummy `mu` in `dpars`, `configure_prior()` errors, because every fixed parameter has to exist in the formula.
+
+## Initial values {#sec-init-ranges}
+
+*You need this when chains fail at initialization or diverge immediately, typically because the likelihood is undefined for part of a parameter's range.*
+
+brms' default initialization draws every parameter from a wide symmetric range on the sampling scale. For a non-decision time that must stay below the fastest observed RT, that often starts chains where the likelihood is undefined. `init_ranges` gives such parameters a narrow window on the native scale:
+
+``` r
+init_ranges = list(
+  mu    = c(-0.1, 0.1),
+  drift = c(-1, 1),
+  bound = c(1, 2),
+  ndt   = c(0.01, 0.05)
+)
+```
+
+`create_initfun.default()` in `R/helpers-inits.R` reads the parameter dimensions from the Stan code and builds an initialization function:
+
+1.  Random effects start tight: standard deviations between 0.05 and 0.1, standardized effects near zero, correlation matrices at the identity.
+2.  Population-level parameters with an `init_ranges` entry start inside that range. The range is transformed through the parameter's link (for softmax mixing weights it is already on the sampling scale), so it stays valid when the user changes the link. With predictors, the coefficients are solved so that each design cell starts inside the range.
+3.  Everything else gets brms' default draw.
+
+`create_initfun()` maps Stan parameter names back to model parameters with the regular expression `(^|_)param(_|$)`, taking the longest match. A parameter called `s` therefore matches `b_s_Intercept` but not `b_sim_Intercept`. A name that appears as a whole underscore-delimited token elsewhere in the Stan parameter names is not safe.
+
+## Aggregated data and `vars` {#sec-aggregate-data}
+
+*You need this when your model is fitted to counts or summary statistics instead of one row per trial.*
+
+brms has special response terms that pass further columns to the Stan likelihood: `vreal()` for real values, `vint()` for integers and `trials()` for a trial count. The EZDM's `bmf2bf()` method builds `mean_rt | vreal(var_rt) + vint(n_upper) + trials(n_trials) ~ 1`, which makes the columns available in Stan as `vreal1[n]`, `vint1[n]` and `trials[n]`. The family names them in `vars`:
+
+``` r
+brms::custom_family(..., loop = TRUE, vars = c("vreal1[n]", "vint1[n]", "trials[n]"))
+```
+
+`loop` decides the shape of the generated Stan code. With `loop = TRUE`, brms emits one likelihood call per observation; with `loop = FALSE`, one vectorized call. You may index `vars` with `[n]` only in a looped likelihood; otherwise brms stops with "Invalid use of index '[n]' in an unlooped custom likelihood". SDM uses `loop = FALSE` and no `vars`.
+
+Add a model fitted to counts to `uses_aggregate_data()` in `R/data_check.R` (currently `m3`, `ezdm` and `mpt`), so that `bmm_data_check()` does not report too few observations per cell.
+
+## Within-chain threading {#sec-threading}
+
+*You need this when your Stan code injects data or likelihood code through `stanvar()`, or your custom family uses `vars` with `loop = FALSE`.*
+
+Passing `threads` to `bmm()` asks brms to split each chain's likelihood across cores. brms slices the response and calls the likelihood inside `partial_log_lik`, where the row bounds `start` and `end` exist. Two things it does *not* slice:
+
+-   **A custom family's `vars`.** brms pastes them in as written, so a vectorized likelihood would receive the whole vector next to a slice of the response. cswald therefore passes `vars = "dec[start:end]"` when threading and `"dec"` otherwise.
+-   **Stan code injected through `stanvar()`**, which has to be written differently depending on whether it ends up inside `partial_log_lik` or in the model block.
+
+Both decisions rest on `brms_slices_likelihood()` in `R/utils.R`. Call it in `configure_model()` rather than reading the `brms.threads` option yourself: it normalizes the option as brms does and is `FALSE` for `threading(force = TRUE)`, where brms compiles with threading support but emits unsliced code. SDM, cswald and `sdt_mafc` use it.
+
+SDM is the fullest example. `inst/stan_chunks/` holds `sdm_simple_likelihood.stan` and `sdm_simple_likelihood_threaded.stan`, and `configure_model.sdm()` reads one of them:
+
+``` r
+likelihood_file <- if (brms_slices_likelihood()) {
+  "sdm_simple_likelihood_threaded.stan"
+} else {
+  "sdm_simple_likelihood.stan"
+}
+```
+
+Data the threaded likelihood needs must also be declared in the partial-log-likelihood signature through the `pll_args` argument of `stanvar()`. SDM passes `"data matrix COSN"` and, through its helper `sdm_stanvar_int_array()`, the run-index arrays. Without that, the variable is out of scope inside `partial_log_lik` and the model does not compile.
+
+Test the generated Stan code with no `threads`, with `threads = 2` and with `threading(2, force = TRUE)`, as `test-model_sdm-stancode.R` does.
+
+## Version tables {#sec-version-tables}
+
+*You need this when your model has several versions, or when you read an older model file and its structure differs from what the template generates.*
+
+`use_model_template("mymodel", versions = c("v1", "v2"))` generates a version table: the specification of each version in one lookup list, which the constructor indexes with `version`. EZDM, cswald and M3 use it:
+
+```{.r filename="R/model_ezdm.R" bmm-src=".ezdm_version_table" bmm-excerpt="abridged"}
+.ezdm_version_table <- list(
+  "3par" = list(
+    parameters = list(...),
+    links = list(...),
+    fixed_parameters = list(...),
+    priors = list(...),
+    init_ranges = list(...)
+  ),
+  "4par" = list(
+    parameters = list(...),
+    links = list(...),
+    ...
+  )
+)
+```
+
+``` r
+parameters = .ezdm_version_table[[version]][["parameters"]],
+```
+
+Keep the default of the alias's `version` argument a literal `c(...)`: `model_versions()` reads it to build the per-version documentation.
+
+Two departures from this shape exist in the package:
+
+-   **M3 nests one level deeper.** Its `links` and `priors` are indexed by the choice rule before the parameter (`.m3_version_table[[version]][["links"]][[choice_rule]]`), `fixed_parameters` is computed in the constructor, and the default version `"custom"` is not in the table at all, because the user supplies the specification. Copy this only if your model has a second axis of variation.
+-   **Some models write their specification inline.** `sdm`, `mixture2p`, `mixture3p`, `imm` and most SDT models have no defaults list or version table, because they predate it. New models use the separated specification.
+
+## Choosing the `sd` prior rate {#sec-sd-rates}
+
+*You need this when you set the `sd` default priors of a new model.*
+
+The shipped models use `exponential()` on the link scale, with the rate chosen by what the parameter measures:
+
+| Rate | Parameters |
+|------|------------------------------------------------------------|
+| 1 | sensitivity, memory strength, concentration (`kappa`), mixing weights, identity-linked drift |
+| 2 | criteria and thresholds, boundary, non-decision time, start point, log-linked drift, diffusion constant, log ratios, log SDs, correlations |
+| 4 | circular bias |
+
+The template repeats this table as a comment above the priors. Every model declares an `sd` prior, except the custom version of M3, which has no default priors at all.
+
+## Naming traps {#sec-naming-traps}
+
+*You need this when brms or Stan fails with an error that does not point at the cause, or when a parameter gets a prior you did not set.*
+
+**A custom family's `dpars` may not contain `_` or `.`, and may not end with a digit.** `brms::custom_family()` checks both, so neither `delta_1` nor `delta1` is a legal name. The digits on IMM parameters (`kappa1`, `theta3`) are generated by `brms::mixture()`, and parameters introduced through `nlf()` are not subject to this check.
+
+**Reusing a brms dpar name inherits its default prior.** brms attaches default priors by name to `mu`, `sigma`, `shape`, `nu`, `phi`, `kappa`, `beta`, `zi`, `hu`, `zoi`, `coi`, `bs`, `ndt`, `bias`, `quantile`, `xi`, `alpha`, `disc` and `theta`, and strips trailing digits first, so `kappa1` is treated as `kappa`. bmm reuses several of these names and sets its own defaults; the trap is a reused name you forget to give a default prior.
+
+**A dpar must not be uniquely prefixed by `thres`.** brms reads `p$thres` when it builds a custom likelihood call, and `$` partial-matches on lists, so a dpar named `threshold` is passed where ordinal thresholds belong. The result is Stan code that does not parse.
+
+**Stan probability-function suffixes need the bar syntax.** A function whose name ends in `_lpdf`, `_lupdf`, `_lpmf`, `_lupmf`, `_cdf`, `_lcdf` or `_lccdf` must be called with a vertical bar between its first two arguments, as `swald_lpdf(rt | drift, bound, ndt, s)`. If your helper is not really a distribution function, give it another name.
+
+**An `nlf()` right-hand side is pasted together as text**, so operator precedence is yours to manage. The IMM parenthesizes every sub-expression it interpolates: `"{lure_idx} * (-expS*{nt_distances} + c) + (1 - {lure_idx}) * (-100)"`.
+
+**Short parameter names collide.** Besides the initial-value matching above (@sec-init-ranges), bmm treats a formula component as non-linear when one of its predictors is also a parameter. When the same name is also a data column, `check_formula()` warns, because the choice changes the likelihood without the user seeing it. One-letter parameters collide with columns such as a condition coded `c`.
